@@ -121,7 +121,7 @@ class _BlogPageState extends State<BlogPage> {
                                     _formatDate(imagen['created_at']),
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.grey[600],
+                                      color: const Color.fromARGB(255, 147, 140, 140),
                                     ),
                                   ),
                                   const SizedBox(height: 12),
