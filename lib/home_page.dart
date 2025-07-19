@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'blog_page.dart';
 import 'upload_page.dart';
+import 'reviews_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,11 +18,13 @@ class _HomePageState extends State<HomePage> {
   final List<Widget> _pages = [
     const BlogPage(),
     const UploadPage(),
+    const ReviewsPage(),
   ];
 
   final List<String> _titles = [
     'Blog',
-    'Subir Archivos',
+    'Agregar',
+    'Reseñas',
   ];
 
   void _onItemTapped(int index) {
@@ -62,14 +65,19 @@ class _HomePageState extends State<HomePage> {
         children: _pages,
       ),
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.article),
-            label: 'Ver Blog',
+            icon: Icon(Icons.photo_library),
+            label: 'Blog',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle),
+            icon: Icon(Icons.add_a_photo),
             label: 'Agregar',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.rate_review),
+            label: 'Reseñas',
           ),
         ],
         currentIndex: _selectedIndex,

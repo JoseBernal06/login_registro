@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'notification_service.dart';
 
 class UploadPage extends StatefulWidget {
   const UploadPage({super.key});
@@ -11,6 +12,7 @@ class UploadPage extends StatefulWidget {
 
 class _UploadPageState extends State<UploadPage> {
   final TextEditingController descriptionController = TextEditingController();
+  final notificationService = NotificationService();
 
   Future<void> pickAndUploadImage(BuildContext context) async {
     final supabase = Supabase.instance.client;
@@ -58,11 +60,11 @@ class _UploadPageState extends State<UploadPage> {
           final timestamp = DateTime.now().millisecondsSinceEpoch;
           final uniqueFileName = '${timestamp}_$fileName';
 
-          // Subir imagen al bucket 'fotos'
-          await supabase.storage.from('fotos').uploadBinary(uniqueFileName, fileBytes);
+          // Subir imagen al bucket 'deber'
+          await supabase.storage.from('deber').uploadBinary(uniqueFileName, fileBytes);
 
           // Obtener la URL pública de la imagen
-          final imageUrl = supabase.storage.from('fotos').getPublicUrl(uniqueFileName);
+          final imageUrl = supabase.storage.from('deber').getPublicUrl(uniqueFileName);
 
           // Obtener el usuario actual
           final user = supabase.auth.currentUser;
@@ -77,8 +79,8 @@ class _UploadPageState extends State<UploadPage> {
             return;
           }
 
-          // Guardar los datos en la tabla 'imagenes'
-          await supabase.from('imagenes').insert({
+          // Guardar los datos en la tabla 'deber_tabla'
+          await supabase.from('deber_tabla').insert({
             'descripcion': descriptionController.text.trim(),
             'imagen': imageUrl,
             'created_at': DateTime.now().toIso8601String(),
@@ -87,6 +89,9 @@ class _UploadPageState extends State<UploadPage> {
 
           // Cerrar diálogo de progreso
           Navigator.of(context).pop();
+
+          // Notificar que se agregó una nueva imagen
+          notificationService.notifyImageAdded();
 
           // Mostrar resultado exitoso
           ScaffoldMessenger.of(context).showSnackBar(

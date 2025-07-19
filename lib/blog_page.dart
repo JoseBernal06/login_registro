@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'notification_service.dart';
+import 'dart:async';
 
 class BlogPage extends StatefulWidget {
   const BlogPage({super.key});
@@ -10,13 +12,36 @@ class BlogPage extends StatefulWidget {
 
 class _BlogPageState extends State<BlogPage> {
   final supabase = Supabase.instance.client;
+  final notificationService = NotificationService();
   List<Map<String, dynamic>> imagenes = [];
   bool isLoading = true;
+  StreamSubscription<bool>? _reviewSubscription;
+  StreamSubscription<bool>? _imageSubscription;
 
   @override
   void initState() {
     super.initState();
     _loadImages();
+    _setupSubscriptions();
+  }
+
+  void _setupSubscriptions() {
+    // Escuchar cuando se agregan nuevas reseñas
+    _reviewSubscription = notificationService.reviewAdded.listen((_) {
+      // No necesitamos recargar imágenes cuando se agrega una reseña
+    });
+
+    // Escuchar cuando se agregan nuevas imágenes
+    _imageSubscription = notificationService.imageAdded.listen((_) {
+      _loadImages(); // Recargar la lista de imágenes
+    });
+  }
+
+  @override
+  void dispose() {
+    _reviewSubscription?.cancel();
+    _imageSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadImages() async {
@@ -25,9 +50,9 @@ class _BlogPageState extends State<BlogPage> {
         isLoading = true;
       });
 
-      // Obtener todas las imágenes de la tabla 'imagenes' ordenadas por fecha de creación
+      // Obtener todas las imágenes de la tabla 'deber_tabla' ordenadas por fecha de creación
       final response = await supabase
-          .from('imagenes')
+          .from('deber_tabla')
           .select('*')
           .order('created_at', ascending: false);
 
@@ -271,16 +296,49 @@ class _BlogPageState extends State<BlogPage> {
                   child: const Text('Cancelar'),
                 ),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (selectedStars > 0 && commentController.text.trim().isNotEmpty) {
-                      // Aquí puedes agregar la lógica para guardar la reseña
-                      Navigator.of(context).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Reseña enviada: $selectedStars estrellas'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
+                      try {
+                        // Obtener el usuario actual
+                        final user = supabase.auth.currentUser;
+                        if (user == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Error: Usuario no autenticado'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
+
+                        // Guardar la reseña en la base de datos
+                        await supabase.from('reviews').insert({
+                          'rating': selectedStars,
+                          'comment': commentController.text.trim(),
+                          'user_id': user.id,
+                          'created_at': DateTime.now().toIso8601String(),
+                        });
+
+                        Navigator.of(context).pop();
+                        
+                        // Notificar que se agregó una nueva reseña
+                        notificationService.notifyReviewAdded();
+                        
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('¡Reseña enviada con $selectedStars estrellas!'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      } catch (e) {
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error al enviar reseña: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
