@@ -16,19 +16,37 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> login() async {
     try {
+      // Mostrar mensaje de intento
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Intentando conectar a Supabase...')),
+      );
+      
       await supabase.auth.signInWithPassword(
         email: emailController.text,
         password: passwordController.text,
       );
     } catch (e) {
+      // Mostrar error más detallado
+      String errorMessage = 'Error al iniciar sesión: $e';
+      if (e.toString().contains('SocketException')) {
+        errorMessage += '\n\nPROBLEMA DE CONEXIÓN:\n- Verifica tu WiFi\n- Cambia DNS a 8.8.8.8\n- Desactiva VPN/Proxy';
+      }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al iniciar sesión: $e')),
+        SnackBar(
+          content: Text(errorMessage),
+          duration: const Duration(seconds: 10),
+        ),
       );
     }
   }
 
   Future<void> signup() async {
     try {
+      // Mostrar mensaje de intento
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Intentando conectar a Supabase...')),
+      );
+      
       await supabase.auth.signUp(
         email: emailController.text,
         password: passwordController.text,
@@ -37,8 +55,16 @@ class _LoginPageState extends State<LoginPage> {
         const SnackBar(content: Text('Revisa tu correo para confirmar tu cuenta.')),
       );
     } catch (e) {
+      // Mostrar error más detallado
+      String errorMessage = 'Error al registrarse: $e';
+      if (e.toString().contains('SocketException')) {
+        errorMessage += '\n\nPROBLEMA DE CONEXIÓN:\n- Verifica tu WiFi\n- Cambia DNS a 8.8.8.8\n- Desactiva VPN/Proxy';
+      }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al registrarse: $e')),
+        SnackBar(
+          content: Text(errorMessage),
+          duration: const Duration(seconds: 10),
+        ),
       );
     }
   }
