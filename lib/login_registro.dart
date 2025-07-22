@@ -77,7 +77,7 @@ class _LoginPageState extends State<LoginPage> {
     // Navegar a la página principal como invitado
     Navigator.pushReplacement(
       context, 
-      MaterialPageRoute(builder: (context) => const HomePage())
+      MaterialPageRoute(builder: (context) => const HomePage(isGuestMode: true))
     );
   }
 
